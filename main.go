@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/miquella/opvault"
-	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,6 +10,12 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/miquella/opvault"
+	"github.com/pquerna/otp"
+	"github.com/pquerna/otp/totp"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var vaultPath = flag.String("vault", "~/.1pw", "path to vault")
@@ -113,6 +117,13 @@ func main() {
 					setClipboard(field.Value())
 					printValue += " [copied]"
 					didClipboard = true
+				}
+				if strings.HasPrefix(field.Name(), "TOTP") {
+					otpKey, err := otp.NewKeyFromURL(field.Value())
+					if err == nil {
+						printValue, _ = totp.GenerateCode(otpKey.Secret(), time.Now())
+					}
+					fmt.Println("Scrotum")
 				}
 				fmt.Printf("\t\t%s / %s (%s) = %s\n", field.Name(), field.Title(), field.Kind(), printValue)
 			}
