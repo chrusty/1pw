@@ -103,11 +103,11 @@ func main() {
 				printValue += " [copied]"
 				didClipboard = true
 			}
-			fmt.Printf("\t%s (%s) = %s\n", field.Name(), field.Type(), printValue)
+			fmt.Printf("\t%s: %s\n", field.Name(), printValue)
 		}
 
 		for _, section := range detail.Sections() {
-			fmt.Printf("\t%s / %s\n", section.Name(), section.Title())
+			fmt.Printf("\t=> %s\n", section.Title())
 			for _, field := range section.Fields() {
 				printValue := field.Value()
 				if !*revealPasswords && field.Kind() == opvault.ConcealedFieldKind {
@@ -119,13 +119,13 @@ func main() {
 					didClipboard = true
 				}
 				if strings.HasPrefix(field.Name(), "TOTP") {
-					otpKey, err := otp.NewKeyFromURL(field.Value())
-					if err == nil {
-						printValue, _ = totp.GenerateCode(otpKey.Secret(), time.Now())
+					if otpKey, err := otp.NewKeyFromURL(field.Value()); err == nil {
+						if totpCode, err := totp.GenerateCode(otpKey.Secret(), time.Now()); err == nil {
+							printValue = totpCode
+						}
 					}
-					fmt.Println("Scrotum")
 				}
-				fmt.Printf("\t\t%s / %s (%s) = %s\n", field.Name(), field.Title(), field.Kind(), printValue)
+				fmt.Printf("\t\t=> %s: %s\n", field.Title(), printValue)
 			}
 		}
 	}
